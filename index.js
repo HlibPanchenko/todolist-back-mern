@@ -22,17 +22,21 @@ app.get("/", (req, res) => {
 
 app.post("/add-task", async (req, res) => {
   try {
-    console.log(req.body);
+    console.log(req.params);
+
+    // const now = new Date();
 
     const doc = new TaskModel({
       text: req.body.text,
       title: req.body.title,
+      date: req.body.date,
+      // createdAt: now.toISOString(),
       // author: req.body.author,
       // email: req.body.email,
     });
 
     const task = await doc.save();
-
+    console.log(task);
     res.json({
       success: true,
       task,
@@ -133,16 +137,36 @@ app.get("/get-one-task/:id", async (req, res) => {
 
 app.get("/get-all-tasks", async (req, res) => {
   try {
+    // console.log(req.params.today);
+
+    const now = new Date();
+    const date = new Date(now.toISOString());
+    const formattedDate = date.toLocaleDateString("en-GB"); // assuming "dd-mm-yyyy" format
+    const dateArray = formattedDate.split("/").map(Number);
+    console.log(dateArray); // [17, 4, 2023]
+
     const pageOptions = {
-      page: parseInt(req.query.page, 10) || 0,
+      // если мы переходим с одного дня на другой, то перекидываем пользователя на первую старницу
+      page:
+        dateArray[0] == req.query.day ? parseInt(req.query.page, 10) || 0 : 1,
+      // page: parseInt(req.query.page, 10) || 0,
       limit: parseInt(req.query.limit, 10) || 5,
+      day: parseInt(req.query.day) || 5,
+      month: parseInt(req.query.month) || 5,
+      year: parseInt(req.query.year) || 5,
     };
 
     console.log(pageOptions);
     // можем найти не все задачи, а по конкретному полю
     //  const tasks = await TaskModel.findOne({ author: req.body.author });
     //   const tasks = await TaskModel.findOne({ author: "Gleb" });
-    const tasks = await TaskModel.find()
+    const tasks = await TaskModel.find({
+      date: {
+        date: pageOptions.day,
+        month: pageOptions.month,
+        year: pageOptions.year,
+      },
+    })
       .skip((pageOptions.page - 1) * 5)
       .limit(pageOptions.limit);
     res.json(tasks);

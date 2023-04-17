@@ -9,6 +9,10 @@ const TaskSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  date: {
+    type: Object,
+    required: true,
+  },
 });
 
 export default mongoose.model("Task", TaskSchema);
